@@ -1,0 +1,7 @@
+numpy==1.20.3
+pandas
+matplotlib
+requests
+tkinter
+sqlite3
+pyinstaller
