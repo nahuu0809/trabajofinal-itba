@@ -1,7 +1,5 @@
 numpy==1.20.3
-pandas
-matplotlib
-requests
-tkinter
-sqlite3
-pyinstaller
+pandas>=1.5.0
+matplotlib>=3.4.0
+requests>=2.28.0
+pyinstaller>=5.0.0
