@@ -128,11 +128,47 @@ class DataVisualization(ttk.Frame):
         self.results_text = tk.Text(main_frame, height=10, width=50)
         self.results_text.pack(pady=10)
 
+        # Frame para botones de acción
+        action_frame = ttk.Frame(main_frame)
+        action_frame.pack(fill='x', pady=5)
+
+        # Botón para borrar datos
+        ttk.Button(
+            action_frame,
+            text="Borrar datos del ticker",
+            command=self.delete_ticker_data
+        ).pack(side='left', padx=5)
+
         # Frame para el botón de volver
         bottom_frame = ttk.Frame(main_frame)
         bottom_frame.pack(fill='x', pady=(10, 0))
 
         ttk.Button(bottom_frame, text="Volver al menú principal", command=lambda: self.show_menu() if self.show_menu else None).pack(side='right', padx=5)
+
+    def delete_ticker_data(self):
+        """Borrar datos del ticker seleccionado"""
+        ticker = self.ticker_entry.get().strip().upper()
+        if not ticker:
+            messagebox.showwarning("Error", "Por favor ingrese un ticker")
+            return
+
+        try:
+            # Verificar si existen datos para este ticker
+            stored_stocks = self.db_handler.get_stored_stocks()
+            stored_tickers = [stock[0] for stock in stored_stocks]  # Obtener lista de tickers
+
+            if ticker not in stored_tickers:
+                messagebox.showwarning("Error", f"No existen datos guardados para el ticker {ticker}")
+                return
+
+            # Si existe, pedir confirmación
+            if messagebox.askyesno("Confirmar", f"¿Está seguro de borrar los datos de {ticker}?"):
+                self.db_handler.delete_stock_data(ticker)
+                messagebox.showinfo("Éxito", f"Datos de {ticker} borrados correctamente")
+                self.show_summary()  # Actualizar el resumen
+                
+        except Exception as e:
+            messagebox.showerror("Error", f"Error al borrar datos: {str(e)}")
 
     def plot_ticker(self, ticker):
         if not ticker:
@@ -153,7 +189,7 @@ class DataVisualization(ttk.Frame):
                 graph.show_menu = self.show_menu  # Agregar esta línea
                 graph.pack(expand=True, fill='both')
             else:
-                messagebox.showwarning("Error", f"No existen datos disponibles para el ticker{ticker}")
+                messagebox.showwarning("Error", f"No existen datos disponibles para el ticker {ticker}")
         except Exception as e:
             messagebox.showerror("Error", f"Error al crear el gráfico: {str(e)}")
 
