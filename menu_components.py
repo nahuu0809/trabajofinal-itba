@@ -2,11 +2,12 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 from datetime import datetime, timedelta
 import pandas as pd
-from typing import Callable
 
 class MainMenu(ttk.Frame):
     def __init__(self, parent):
         super().__init__(parent)
+        self.show_data_update = None
+        self.show_data_viz = None
         self.setup_menu()
 
     def setup_menu(self):
@@ -17,7 +18,7 @@ class MainMenu(ttk.Frame):
         # Title
         ttk.Label(
             menu_frame, 
-            text="Stock Data Application", 
+            text="Aplicación de Datos Bursátiles", 
             font=('Arial', 14)
         ).pack(pady=20)
 
@@ -25,13 +26,13 @@ class MainMenu(ttk.Frame):
         ttk.Button(
             menu_frame,
             text="1. Actualización de datos",
-            command=self.show_data_update
+            command=lambda: self.show_data_update() if self.show_data_update else None
         ).pack(pady=10)
 
         ttk.Button(
             menu_frame,
             text="2. Visualización de datos",
-            command=self.show_data_viz
+            command=lambda: self.show_data_viz() if self.show_data_viz else None
         ).pack(pady=10)
 
 class DataUpdateForm(ttk.Frame):
@@ -39,6 +40,7 @@ class DataUpdateForm(ttk.Frame):
         super().__init__(parent)
         self.api_handler = api_handler
         self.db_handler = db_handler
+        self.show_menu = None
         self.setup_form()
 
     def setup_form(self):
@@ -70,7 +72,7 @@ class DataUpdateForm(ttk.Frame):
         ttk.Button(
             form_frame,
             text="Volver al menú",
-            command=self.show_menu
+            command=lambda: self.show_menu() if self.show_menu else None
         ).pack(pady=5)
 
         # Status label
@@ -91,8 +93,8 @@ class DataUpdateForm(ttk.Frame):
             self.status_label.config(text="Pidiendo datos...")
             self.update()
 
-            # Fetch data from API with smart update
-            data = self.api_handler.get_stock_data_smart_update(ticker, start_date, end_date)
+            # Fetch data from API
+            data = self.api_handler.get_stock_data(ticker, start_date, end_date)
             
             if data is not None:
                 # Save to database
@@ -106,37 +108,85 @@ class DataUpdateForm(ttk.Frame):
             self.status_label.config(text="Error al guardar datos")
             messagebox.showerror("Error", str(e))
 
-    def show_menu(self):
-        # Implementation depends on your navigation setup
-        pass
-
 class DataVisualization(ttk.Frame):
     def __init__(self, parent, db_handler):
         super().__init__(parent)
         self.db_handler = db_handler
+        self.show_menu = None
         self.setup_visualization()
 
     def setup_visualization(self):
-        # Container
-        viz_frame = ttk.Frame(self)
-        viz_frame.pack(expand=True, fill='both', padx=20, pady=20)
+        # Container principal
+        main_frame = ttk.Frame(self)
+        main_frame.pack(expand=True, fill='both', padx=20, pady=20)
 
-        # Buttons for different views
+        # Frame para entrada directa de ticker (ahora arriba)
+        ticker_frame = ttk.Frame(main_frame)
+        ticker_frame.pack(fill='x', pady=(0, 10))
+
+        ttk.Label(
+            ticker_frame,
+            text="Ingrese ticker a graficar:"
+        ).pack(side='left', padx=5)
+
+        self.ticker_entry = ttk.Entry(ticker_frame, width=10)
+        self.ticker_entry.pack(side='left', padx=5)
+
         ttk.Button(
-            viz_frame,
+            ticker_frame,
+            text="Graficar",
+            command=lambda: self.plot_ticker(self.ticker_entry.get())
+        ).pack(side='left', padx=5)
+
+        # Frame para los botones
+        button_frame = ttk.Frame(main_frame)
+        button_frame.pack(fill='x', pady=10)
+
+        # Botones alineados horizontalmente
+        ttk.Button(
+            button_frame,
             text="a. Resumen",
+            width=20,
             command=self.show_summary
-        ).pack(pady=10)
+        ).pack(side='left', padx=5)
+
+        # Área de resultados
+        self.results_text = tk.Text(main_frame, height=10, width=50)
+        self.results_text.pack(pady=10)
+
+        # Frame para el botón de volver
+        bottom_frame = ttk.Frame(main_frame)
+        bottom_frame.pack(fill='x', pady=(10, 0))
 
         ttk.Button(
-            viz_frame,
-            text="b. Gráfico de ticker",
-            command=self.show_graph
-        ).pack(pady=10)
+            bottom_frame,
+            text="Volver al menú",
+            command=lambda: self.show_menu() if self.show_menu else None
+        ).pack(side='right', padx=5)
 
-        # Results area
-        self.results_text = tk.Text(viz_frame, height=10, width=50)
-        self.results_text.pack(pady=10)
+    def plot_ticker(self, ticker):
+        """Plot the ticker data"""
+        if not ticker:
+            messagebox.showwarning("Error", "Por favor ingrese un ticker")
+            return
+            
+        ticker = ticker.strip().upper()
+        try:
+            data = self.db_handler.get_stock_data(ticker)
+            if data is not None and not data.empty:
+                from graph_visual import StockGraph
+                graph_window = tk.Toplevel(self)
+                graph_window.title(f"Gráfico de {ticker}")
+                graph_window.geometry("800x600")
+                
+                # Crear el gráfico y pasar el show_menu
+                graph = StockGraph(graph_window, ticker, data)
+                graph.show_menu = self.show_menu  # Agregar esta línea
+                graph.pack(expand=True, fill='both')
+            else:
+                messagebox.showwarning("Error", f"No hay datos disponibles para {ticker}")
+        except Exception as e:
+            messagebox.showerror("Error", f"Error al crear el gráfico: {str(e)}")
 
     def show_summary(self):
         """Show summary of stored data"""
@@ -148,18 +198,3 @@ class DataVisualization(ttk.Frame):
         for ticker, start_date, end_date in stored_stocks:
             self.results_text.insert(tk.END, 
                 f"{ticker} - {start_date} <-> {end_date}\n")
-
-    def show_graph(self):
-        """Show graph input dialog"""
-        dialog = tk.Toplevel(self)
-        dialog.title("Gráfico de Ticker")
-        
-        ttk.Label(dialog, text="Ingrese el ticker a graficar:").pack(pady=5)
-        ticker_entry = ttk.Entry(dialog)
-        ticker_entry.pack(pady=5)
-        
-        ttk.Button(
-            dialog,
-            text="Graficar",
-            command=lambda: self.plot_ticker(ticker_entry.get())
-        ).pack(pady=10)

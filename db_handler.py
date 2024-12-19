@@ -1,9 +1,8 @@
 import sqlite3
 import logging
 from contextlib import contextmanager
-from typing import List, Tuple, Optional
+from typing import List, Tuple
 import pandas as pd
-from datetime import datetime
 
 class StockDatabase:
     def __init__(self, db_file: str = 'stocks.db'):
@@ -18,7 +17,7 @@ class StockDatabase:
             conn = sqlite3.connect(self.db_file)
             yield conn
         except sqlite3.Error as e:
-            logging.error(f"Database error: {e}")
+            logging.error(f"Error de base de datos: {e}")
             raise
         finally:
             if conn:
@@ -30,7 +29,7 @@ class StockDatabase:
             with self.get_connection() as conn:
                 cursor = conn.cursor()
                 
-                # Stock data table only
+                # Crear tabla de datos de acciones
                 cursor.execute('''
                     CREATE TABLE IF NOT EXISTS stock_data (
                         ticker TEXT,
@@ -44,27 +43,37 @@ class StockDatabase:
                     )
                 ''')
                 
+                # Crear tabla de rangos de fechas
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS date_ranges (
+                        ticker TEXT PRIMARY KEY,
+                        start_date TEXT,
+                        end_date TEXT
+                    )
+                ''')
+                
                 conn.commit()
+                logging.info("Base de datos inicializada correctamente")
                 
         except Exception as e:
-            logging.error(f"Failed to setup database: {e}")
+            logging.error(f"Error al configurar la base de datos: {e}")
             raise
 
     def save_stock_data(self, ticker: str, data: pd.DataFrame):
-        """Save stock data to database with date tracking."""
+        """Save stock data and update date ranges."""
         try:
             with self.get_connection() as conn:
-                # Convert DataFrame to SQL-friendly format
-                data['ticker'] = ticker
+                # Preparar datos para stock_data
+                data_to_save = data.copy()
+                data_to_save['ticker'] = ticker
                 
-                # Use INSERT OR REPLACE to handle updates
-                data.to_sql('stock_data', conn, if_exists='replace', index=False)
+                # Guardar datos en stock_data
+                data_to_save.to_sql('stock_data', conn, if_exists='replace', index=False)
                 
-                # Update date range tracking
+                # Actualizar date_ranges
                 cursor = conn.cursor()
                 cursor.execute('''
-                    INSERT OR REPLACE INTO date_ranges 
-                    (ticker, start_date, end_date) 
+                    INSERT OR REPLACE INTO date_ranges (ticker, start_date, end_date)
                     VALUES (?, ?, ?)
                 ''', (
                     ticker,
@@ -73,10 +82,22 @@ class StockDatabase:
                 ))
                 
                 conn.commit()
-                logging.info(f"Saved data for {ticker}")
+                logging.info(f"Datos guardados para {ticker}")
                 
         except Exception as e:
-            logging.error(f"Failed to save stock data: {e}")
+            logging.error(f"Error al guardar datos: {e}")
+            raise
+
+    def get_stock_data(self, ticker: str) -> pd.DataFrame:
+        """Get stock data for a specific ticker."""
+        try:
+            with self.get_connection() as conn:
+                query = "SELECT * FROM stock_data WHERE ticker = ? ORDER BY date"
+                data = pd.read_sql_query(query, conn, params=(ticker,))
+                return data if not data.empty else None
+                
+        except Exception as e:
+            logging.error(f"Error al obtener datos de stock: {e}")
             raise
 
     def get_stored_stocks(self) -> List[Tuple[str, str, str]]:
@@ -85,66 +106,25 @@ class StockDatabase:
             with self.get_connection() as conn:
                 cursor = conn.cursor()
                 cursor.execute('''
-                    SELECT 
-                        ticker,
-                        MIN(date) as start_date,
-                        MAX(date) as end_date
-                    FROM stock_data
-                    GROUP BY ticker
+                    SELECT ticker, start_date, end_date
+                    FROM date_ranges
                     ORDER BY ticker
                 ''')
                 return cursor.fetchall()
                 
         except Exception as e:
-            logging.error(f"Failed to get stored stocks: {e}")
+            logging.error(f"Error al obtener stocks almacenados: {e}")
             raise
 
-    def get_stock_data(self, ticker: str) -> Optional[pd.DataFrame]:
-        """Retrieve stock data from database."""
-        try:
-            with self.get_connection() as conn:
-                query = "SELECT * FROM stock_data WHERE ticker = ? ORDER BY date"
-                return pd.read_sql_query(query, conn, params=(ticker,))
-                
-        except Exception as e:
-            logging.error(f"Failed to get stock data: {e}")
-            return None
-
-    def add_to_favorites(self, ticker: str):
-        """Add stock to favorites."""
+    def delete_stock_data(self, ticker: str):
+        """Delete all data for a specific ticker."""
         try:
             with self.get_connection() as conn:
                 cursor = conn.cursor()
-                cursor.execute(
-                    "INSERT OR REPLACE INTO favorites (ticker, added_date) VALUES (?, ?)",
-                    (ticker, datetime.now().strftime('%Y-%m-%d'))
-                )
+                cursor.execute("DELETE FROM stock_data WHERE ticker = ?", (ticker,))
+                cursor.execute("DELETE FROM date_ranges WHERE ticker = ?", (ticker,))
                 conn.commit()
                 
         except Exception as e:
-            logging.error(f"Failed to add favorite: {e}")
-            raise
-
-    def remove_from_favorites(self, ticker: str):
-        """Remove stock from favorites."""
-        try:
-            with self.get_connection() as conn:
-                cursor = conn.cursor()
-                cursor.execute("DELETE FROM favorites WHERE ticker = ?", (ticker,))
-                conn.commit()
-                
-        except Exception as e:
-            logging.error(f"Failed to remove favorite: {e}")
-            raise
-
-    def get_favorites(self) -> List[Tuple[str, str]]:
-        """Get list of favorite stocks."""
-        try:
-            with self.get_connection() as conn:
-                cursor = conn.cursor()
-                cursor.execute("SELECT ticker, added_date FROM favorites ORDER BY added_date DESC")
-                return cursor.fetchall()
-                
-        except Exception as e:
-            logging.error(f"Failed to get favorites: {e}")
+            logging.error(f"Error al eliminar datos: {e}")
             raise
