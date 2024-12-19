@@ -36,8 +36,7 @@ class APIHandler:
             logging.error(f"API connection test failed: {e}")
             return False
 
-    def get_stock_data(self, ticker: str, start_date: Optional[str] = None, 
-                      end_date: Optional[str] = None) -> Optional[pd.DataFrame]:
+    def get_stock_data(self, ticker: str, start_date: Optional[str] = None, end_date: Optional[str] = None) -> Optional[pd.DataFrame]:
         """
         Fetch stock data for a given ticker and date range.
         

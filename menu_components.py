@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 from datetime import datetime, timedelta
 import pandas as pd
+from main import LoginWindow
 
 class MainMenu(ttk.Frame):
     def __init__(self, parent):
@@ -16,11 +17,7 @@ class MainMenu(ttk.Frame):
         menu_frame.pack(expand=True)
 
         # Title
-        ttk.Label(
-            menu_frame, 
-            text="Aplicación de Datos Bursátiles", 
-            font=('Arial', 14)
-        ).pack(pady=20)
+        ttk.Label(menu_frame, text="Aplicación de Datos Financieros", font=('Arial', 14)).pack(pady=20)
 
         # Main buttons
         ttk.Button(
@@ -45,11 +42,12 @@ class DataUpdateForm(ttk.Frame):
 
     def setup_form(self):
         # Form container
-        form_frame = ttk.LabelFrame(self, text="Actualización de datos", padding="20")
+        username = self.username_entry.get(LoginWindow.username_entry).strip()
+        form_frame = ttk.LabelFrame(self, text=f"Actualización de datos - Usuario Logueado: {username}", padding="20")
         form_frame.pack(expand=True, fill='both', padx=20, pady=20)
 
         # Ticker input
-        ttk.Label(form_frame, text="Ingrese ticker:").pack(anchor='w', pady=5)
+        ttk.Label(form_frame, text="Ingrese el ticker deseado:").pack(anchor='w', pady=5)
         self.ticker_entry = ttk.Entry(form_frame)
         self.ticker_entry.pack(fill='x', pady=5)
 
@@ -63,18 +61,8 @@ class DataUpdateForm(ttk.Frame):
         self.end_date.pack(fill='x', pady=5)
 
         # Action buttons
-        ttk.Button(
-            form_frame,
-            text="Guardar datos",
-            command=self.save_to_database
-        ).pack(pady=10)
-
-        ttk.Button(
-            form_frame,
-            text="Volver al menú",
-            command=lambda: self.show_menu() if self.show_menu else None
-        ).pack(pady=5)
-
+        ttk.Button(form_frame, text="Obtener datos", command=self.save_to_database).pack(pady=10)
+        ttk.Button(form_frame, text="Volver al menú principal", command=lambda: self.show_menu() if self.show_menu else None).pack(pady=5)
         # Status label
         self.status_label = ttk.Label(form_frame, text="")
         self.status_label.pack(pady=10)
@@ -102,7 +90,7 @@ class DataUpdateForm(ttk.Frame):
                 self.status_label.config(text="Datos guardados correctamente")
                 messagebox.showinfo("Éxito", "Datos guardados en la base de datos")
             else:
-                raise ValueError(f"No hay datos disponibles para {ticker}")
+                raise ValueError(f"No existen datos disponibles para el ticker {ticker}")
 
         except Exception as e:
             self.status_label.config(text="Error al guardar datos")
@@ -124,31 +112,19 @@ class DataVisualization(ttk.Frame):
         ticker_frame = ttk.Frame(main_frame)
         ticker_frame.pack(fill='x', pady=(0, 10))
 
-        ttk.Label(
-            ticker_frame,
-            text="Ingrese ticker a graficar:"
-        ).pack(side='left', padx=5)
+        ttk.Label(ticker_frame, text="Ingrese el ticker a graficar:").pack(side='left', padx=5)
 
         self.ticker_entry = ttk.Entry(ticker_frame, width=10)
         self.ticker_entry.pack(side='left', padx=5)
 
-        ttk.Button(
-            ticker_frame,
-            text="Graficar",
-            command=lambda: self.plot_ticker(self.ticker_entry.get())
-        ).pack(side='left', padx=5)
+        ttk.Button(ticker_frame, text="Graficar", command=lambda: self.plot_ticker(self.ticker_entry.get())).pack(side='left', padx=5)
 
         # Frame para los botones
         button_frame = ttk.Frame(main_frame)
         button_frame.pack(fill='x', pady=10)
 
         # Botones alineados horizontalmente
-        ttk.Button(
-            button_frame,
-            text="a. Resumen",
-            width=20,
-            command=self.show_summary
-        ).pack(side='left', padx=5)
+        ttk.Button(button_frame, text="a. Resumen", width=20, command=self.show_summary).pack(side='left', padx=5)
 
         # Área de resultados
         self.results_text = tk.Text(main_frame, height=10, width=50)
@@ -158,11 +134,7 @@ class DataVisualization(ttk.Frame):
         bottom_frame = ttk.Frame(main_frame)
         bottom_frame.pack(fill='x', pady=(10, 0))
 
-        ttk.Button(
-            bottom_frame,
-            text="Volver al menú",
-            command=lambda: self.show_menu() if self.show_menu else None
-        ).pack(side='right', padx=5)
+        ttk.Button(bottom_frame, text="Volver al menú principal", command=lambda: self.show_menu() if self.show_menu else None).pack(side='right', padx=5)
 
     def plot_ticker(self, ticker):
         """Plot the ticker data"""
@@ -176,7 +148,7 @@ class DataVisualization(ttk.Frame):
             if data is not None and not data.empty:
                 from graph_visual import StockGraph
                 graph_window = tk.Toplevel(self)
-                graph_window.title(f"Gráfico de {ticker}")
+                graph_window.title(f"Gráfico de {ticker} - Usuario Logueado: {self.username}")
                 graph_window.geometry("800x600")
                 
                 # Crear el gráfico y pasar el show_menu
@@ -184,12 +156,11 @@ class DataVisualization(ttk.Frame):
                 graph.show_menu = self.show_menu  # Agregar esta línea
                 graph.pack(expand=True, fill='both')
             else:
-                messagebox.showwarning("Error", f"No hay datos disponibles para {ticker}")
+                messagebox.showwarning("Error", f"No existen datos disponibles para el ticker{ticker}")
         except Exception as e:
             messagebox.showerror("Error", f"Error al crear el gráfico: {str(e)}")
 
     def show_summary(self):
-        """Show summary of stored data"""
         stored_stocks = self.db_handler.get_stored_stocks()
         
         self.results_text.delete(1.0, tk.END)

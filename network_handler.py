@@ -19,12 +19,7 @@ class NetworkHandler:
         self.status_frame.pack(side='bottom', fill='x', padx=5, pady=2)
 
         # Create canvas for status dot
-        self.canvas = tk.Canvas(
-            self.status_frame,
-            width=10,
-            height=10,
-            bg=self.root['bg']
-        )
+        self.canvas = tk.Canvas(self.status_frame, width=10, height=10, bg=self.root['bg'])
         self.canvas.pack(side='left', padx=5)
 
         # Create status dot
