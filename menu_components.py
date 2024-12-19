@@ -2,7 +2,6 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 from datetime import datetime, timedelta
 import pandas as pd
-from main import LoginWindow
 
 class MainMenu(ttk.Frame):
     def __init__(self, parent):
@@ -33,17 +32,17 @@ class MainMenu(ttk.Frame):
         ).pack(pady=10)
 
 class DataUpdateForm(ttk.Frame):
-    def __init__(self, parent, api_handler, db_handler):
+    def __init__(self, parent, api_handler, db_handler, username):
         super().__init__(parent)
         self.api_handler = api_handler
         self.db_handler = db_handler
         self.show_menu = None
+        self.username = username
         self.setup_form()
 
     def setup_form(self):
         # Form container
-        username = self.username_entry.get(LoginWindow.username_entry).strip()
-        form_frame = ttk.LabelFrame(self, text=f"Actualización de datos - Usuario Logueado: {username}", padding="20")
+        form_frame = ttk.LabelFrame(self, text=f"Actualización de datos - Usuario Logueado: {self.username}", padding="20")
         form_frame.pack(expand=True, fill='both', padx=20, pady=20)
 
         # Ticker input
@@ -68,7 +67,7 @@ class DataUpdateForm(ttk.Frame):
         self.status_label.pack(pady=10)
 
     def save_to_database(self):
-        """Save stock data to database."""
+        # Save stock data to database
         ticker = self.ticker_entry.get().strip().upper()
         start_date = self.start_date.get().strip()
         end_date = self.end_date.get().strip()
@@ -107,8 +106,7 @@ class DataVisualization(ttk.Frame):
         # Container principal
         main_frame = ttk.Frame(self)
         main_frame.pack(expand=True, fill='both', padx=20, pady=20)
-
-        # Frame para entrada directa de ticker (ahora arriba)
+        
         ticker_frame = ttk.Frame(main_frame)
         ticker_frame.pack(fill='x', pady=(0, 10))
 
@@ -137,7 +135,6 @@ class DataVisualization(ttk.Frame):
         ttk.Button(bottom_frame, text="Volver al menú principal", command=lambda: self.show_menu() if self.show_menu else None).pack(side='right', padx=5)
 
     def plot_ticker(self, ticker):
-        """Plot the ticker data"""
         if not ticker:
             messagebox.showwarning("Error", "Por favor ingrese un ticker")
             return

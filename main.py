@@ -4,54 +4,16 @@ import logging
 from api_handler import APIHandler
 from db_handler import StockDatabase
 from menu_components import MainMenu, DataUpdateForm, DataVisualization
+from login_window import LoginWindow
 from dotenv import load_dotenv
 import os
-import sys
 
 # Setup logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s', filename='stock_app.log')
-
-class LoginWindow:
-    def __init__(self):
-        self.root = tk.Tk()
-        self.root.title("Aplicación de Datos Financieros - Login")
-        self.root.geometry("400x300")
-        
-        # Frame principal
-        main_frame = ttk.Frame(self.root, padding="20")
-        main_frame.pack(expand=True, fill='both')
-        
-        # Título
-        ttk.Label(main_frame, text="Bienvenido Usuario", font=('Arial', 14)).pack(pady=10)
-        
-        # Username
-        ttk.Label(main_frame, text="Ingrese su usuario:").pack(pady=5)
-        self.username_entry = ttk.Entry(main_frame)
-        self.username_entry.pack(pady=5)
-        
-        # Login button
-        ttk.Button(main_frame, text="Ingresar", command=self.login).pack(pady=20)
-        
-        self.username = None
-        # Manejar el cierre de ventana
-        self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
-
-    def login(self):
-        username = self.username_entry.get().strip()
-        if username:
-            self.username = username
-            self.root.quit()
-        else:
-            messagebox.showerror("Error", "Por favor ingrese un usuario")
-
-    def on_closing(self):
-        """Manejar el cierre de la ventana"""
-        self.root.destroy()
-        os._exit(0)  # Forzar cierre del programa
-
-    def show(self):
-        self.root.mainloop()
-        return self.username
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    filename='stock_app.log'
+)
 
 class StockApp:
     def __init__(self, root, username):
@@ -94,20 +56,6 @@ class StockApp:
             messagebox.showerror("Error", f"Error al inicializar la aplicación: {str(e)}")
             self.on_closing()
 
-    def on_closing(self):
-        try:
-            if hasattr(self, 'db'):
-                # Cerrar conexiones de base de datos si existen
-                del self.db
-            if hasattr(self, 'api_handler'):
-                # Limpiar recursos del API handler si es necesario
-                del self.api_handler
-            self.root.destroy()
-            os._exit(0)  # Forzar cierre del programa
-        except Exception as e:
-            logging.error(f"Error al cerrar la aplicación: {e}")
-            os._exit(1)  # Forzar cierre con error
-
     def setup_header(self):
         header_frame = ttk.Frame(self.main_container)
         header_frame.pack(fill='x', padx=10, pady=5)
@@ -123,7 +71,7 @@ class StockApp:
 
     def show_data_update(self):
         self.clear_container()
-        form = DataUpdateForm(self.main_container, self.api_handler, self.db)
+        form = DataUpdateForm(self.main_container, self.api_handler, self.db, self.username)
         form.show_menu = self.show_main_menu
         form.pack(expand=True, fill='both')
 
@@ -137,13 +85,34 @@ class StockApp:
         for widget in list(self.main_container.winfo_children())[1:]:
             widget.destroy()
 
+    def on_closing(self):
+        # Manejar el cierre de la aplicación principal
+        try:
+            if hasattr(self, 'db'):
+                # Cerrar conexiones de base de datos si existen
+                del self.db
+            if hasattr(self, 'api_handler'):
+                # Limpiar recursos del API handler si es necesario
+                del self.api_handler
+            self.root.destroy()
+            os._exit(0)
+        except Exception as e:
+            logging.error(f"Error al cerrar la aplicación: {e}")
+            os._exit(1)
+
 def main():
     try:
-        # Show login window
         login = LoginWindow()
         username = login.show()
         
         if username:
+            # Asegurarse de que la ventana de login esté completamente cerrada
+            try:
+                login.root.destroy()
+            except:
+                pass
+            
+            # Iniciar la aplicación principal
             root = tk.Tk()
             app = StockApp(root, username)
             root.mainloop()

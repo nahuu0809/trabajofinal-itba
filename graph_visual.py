@@ -14,7 +14,6 @@ class StockGraph(ttk.Frame):
         self.setup_graph()
 
     def setup_graph(self):
-        """Initialize and setup the graph components."""
         try:
             # Create figure
             self.figure = plt.figure(figsize=(10, 6))
@@ -42,16 +41,11 @@ class StockGraph(ttk.Frame):
             self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
 
             # Add back button
-            ttk.Button(
-                self,
-                text="Volver",
-                command=lambda: self.show_menu() if self.show_menu else None
-            ).pack(pady=10)
+            ttk.Button(self, text="Volver", command=lambda: self.show_menu() if self.show_menu else None).pack(pady=10)
 
         except Exception as e:
             logging.error(f"Error al crear el gráfico: {e}")
             raise
 
     def clear(self):
-        """Clear the graph."""
         plt.close(self.figure)
