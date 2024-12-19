@@ -4,15 +4,15 @@ from api_handler import get_stock_data
 
 # Función para manejar el envío de los datos de la API (ejemplo)
 def submit_data():
-    ticker = ticker_entry.get()
-    start_date = date_range_entryFrom.get()
-    end_date = date_range_entryTo.get()
-    try:
-            data = get_stock_data(ticker, start_date, end_date)
-            print(data)  # Aquí puedes mostrar los datos de la API o hacer algo con ellos
-            tk.messagebox.showinfo("Data", f"Datos recibidos para {ticker}")
-    except Exception as e:
-            tk.messagebox.showerror("Error", f"Error: {e}")
+        ticker = ticker_entry.get()
+        start_date = date_range_entryFrom.get()
+        end_date = date_range_entryTo.get()
+        try:
+                data = get_stock_data(ticker, start_date, end_date)
+                print(data)  # Aquí puedes mostrar los datos de la API o hacer algo con ellos
+                tk.messagebox.showinfo("Data", f"Datos recibidos para {ticker}")
+        except Exception as e:
+                tk.messagebox.showerror("Error", f"Error: {e}")
 
 
 # Menú de selección de ticker
