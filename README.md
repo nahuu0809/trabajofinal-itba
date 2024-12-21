@@ -8,7 +8,7 @@ Esta aplicación permite obtener y almacenar datos históricos de acciones utili
 
     ```bash
     git clone https://github.com/nahuu0809/trabajofinal-itba.git
-    cd stock-data-app
+    cd trabajofinal-itba
     ```
 
 2. Crea un entorno virtual para el proyecto (opcional pero recomendado):
@@ -37,8 +37,6 @@ Esta aplicación permite obtener y almacenar datos históricos de acciones utili
     ```bash
     python main.py
     ```
-6. (Opcional)
-    Es posible ejecutar la aplicacion usando el installer que aparece en releases.
 
 ## Uso
 
@@ -47,15 +45,8 @@ Esta aplicación permite obtener y almacenar datos históricos de acciones utili
 3. La aplicación usa la API de Polygon.io para obtener los datos de las acciones y almacenarlos en una base de datos SQLite local (`stocks.db`).
 4. Los datos de los tickers se almacenan en la base de datos y no es necesario hacer una nueva consulta a la API si ya están almacenados.
 
-## Estructura del Proyecto
-
-stock-data-app/ │ ├── main.py # Archivo principal con la lógica de la UI ├── api_handler.py # Funciones para interactuar con la API de Polygon.io ├── stocks.db # Base de datos SQLite donde se almacenan los datos de los tickers ├── .env # Archivo para almacenar la clave API ├── requirements.txt # Dependencias del proyecto └── README.md # Este archivo
-
-
 ## Dependencias
 
 - `requests`: Para realizar HTTP requests a la API de Polygon.io.
 - `python-dotenv`: Para cargar las variables de entorno (Ejemplo: API KEY de Poligon) desde el archivo `.env`.
 - `tkinter`: Para la creación de la interfaz gráfica de usuario.
-- `pyinstaller`: Para la creación del installer `.exe`.
-- 
