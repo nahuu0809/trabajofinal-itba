@@ -24,10 +24,12 @@ Esta aplicación permite obtener y almacenar datos históricos de acciones utili
     pip install -r requirements.txt
     ```
 
-4. Crea un archivo `.env` para almacenar tu clave API:
+4. Crea un archivo `.env` para almacenar tu clave API y las siguientes URLs:
 
     ```plaintext
     API_KEY=tu_clave_de_api
+    BASE_URL_HIS = "https://api.polygon.io/v2/aggs/ticker"
+    BASE_URL_REAL = "https://api.polygon.io/v3/reference/tickers"
     ```
 
     IMPORTANTE: Para que la aplicacion funcione correctamente, es necesario tener una API KEY de [Polygon.io](https://polygon.io/) para lo cual es requerido tener una cuenta.
