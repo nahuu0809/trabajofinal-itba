@@ -2,6 +2,7 @@
 
 Esta aplicación permite obtener y almacenar datos históricos de acciones utilizando la API de Polygon.io. Los datos obtenidos se almacenan en una base de datos creada usando SQLite para su uso posterior, permitiendo seleccionar y visualizar los tickers sin necesidad de hacer una nueva consulta a la API cada vez.
 
+
 ## Instalación
 
 1. Clona el repositorio a tu máquina local:
@@ -40,6 +41,7 @@ Esta aplicación permite obtener y almacenar datos históricos de acciones utili
     python main.py
     ```
 
+
 ## Uso
 
 1. Al abrir la aplicación, se solicita que ingreses tu nombre.
@@ -47,8 +49,19 @@ Esta aplicación permite obtener y almacenar datos históricos de acciones utili
 3. La aplicación usa la API de Polygon.io para obtener los datos de las acciones y almacenarlos en una base de datos SQLite local (`stocks.db`).
 4. Los datos de los tickers se almacenan en la base de datos y no es necesario hacer una nueva consulta a la API si ya están almacenados.
 
+
 ## Dependencias
 
 - `requests`: Para realizar HTTP requests a la API de Polygon.io.
 - `python-dotenv`: Para cargar las variables de entorno (Ejemplo: API KEY de Poligon) desde el archivo `.env`.
 - `tkinter`: Para la creación de la interfaz gráfica de usuario.
+
+## Créditos
+
+- Datos de mercado: [Polygon.io](https://polygon.io) (se necesita una API key propia, sujeta a sus términos).
+- Bibliotecas: [pandas](https://pandas.pydata.org), [matplotlib](https://matplotlib.org), [seaborn](https://seaborn.pydata.org), [requests](https://requests.readthedocs.io) y [python-dotenv](https://github.com/theskumar/python-dotenv).
+- Trabajo final del curso de Python del [ITBA](https://www.itba.edu.ar).
+
+## Licencia
+
+Código bajo [licencia MIT](LICENSE). © 2026 Nahuel Emiliano Diaz.
